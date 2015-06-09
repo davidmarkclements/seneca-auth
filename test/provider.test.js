@@ -2,7 +2,8 @@
 var Server            = require('./util/Server.js')
 var MockAuthStrategy  = require('./util/MockAuthStrategy.js')
 
-var assert  = require('assert')
+var assert  = Object.create(require('assert'))
+assert.falsey = function (v) { return assert.ok(!v); }
 var request = require('request')
 var seneca  = require('seneca')()
 
@@ -30,13 +31,19 @@ describe('integration test', function() {
   })
 
   it('login should fail with wrong login', function(done) {
-    var r = request.post('http://localhost:3000/auth/login', {data: {username: 'foo', password: 'bar'}}, function (err, httpResponse, body) {
-      console.log(httpResponse.statusCode, err, body)
-      done(err)
-    })
-//    var form = r.form()
-//    form.append('username', 'foo')
-//    form.append('password', 'bar2')
+    var r = request
+      .post('http://localhost:3000/auth/login', 
+        {
+          json: true,
+          body: {username: 'foo', password: 'bar'}
+        }, 
+        function (err, httpResponse, body) {
+          assert.falsey(err);
+          assert.equal(httpResponse.statusCode, 401);
+          assert.falsey(body.ok);
+          assert.equal(body.why, 'user-not-found');
+          done(err)
+        })
 
   })
 
